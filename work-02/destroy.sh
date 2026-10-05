@@ -2,18 +2,35 @@
 set -euo pipefail
 
 PREFIX=gubaydullin-09
-VM_COUNT=2
 
-# сначала то, что ссылается на другие ресурсы
-yc load-balancer network-load-balancer delete "$PREFIX-lb"
-yc load-balancer target-group delete "$PREFIX-tg"
+delete_if_exists() { # функция, чтобы удалять только если такой ресурс есть
+  local NAME="$1"
+  shift # first parameter out of the question now
+  # $@ are the rest of parameters put into command line
+  local ID
+  ID=$(yc "$@" list --format json |
+    jq -r --arg name "$NAME" \
+      '.[] | select(.name == $name) | .id')
 
-for i in $(seq 1 "$VM_COUNT"); do
-  yc compute instance delete "$PREFIX-app-$i"
+  if [[ -n "$ID" ]]; then
+    yc "$@" delete "$ID"
+  fi
+}
+
+# Удаляем балансировщик и целевую группу
+delete_if_exists "$PREFIX-lb" load-balancer network-load-balancer
+delete_if_exists "$PREFIX-tg" load-balancer target-group
+
+# Удаляем все существующие ВМ с началом gubaydullin-09-app-
+VM_IDS=$(yc compute instance list --format json |
+  jq -r --arg prefix "$PREFIX-app-" \
+    '.[] | select(.name | startswith($prefix)) | .id')
+for id in $VM_IDS; do
+  yc compute instance delete "$id"
 done
 
-yc compute disk delete "$PREFIX-data"
-
-yc vpc subnet delete "$PREFIX-subnet-a"
-yc vpc subnet delete "$PREFIX-subnet-b"
-yc vpc network delete "$PREFIX-net"
+# Удаляем диск, подсети и сеть
+delete_if_exists "$PREFIX-data" compute disk
+delete_if_exists "$PREFIX-subnet-a" vpc subnet
+delete_if_exists "$PREFIX-subnet-b" vpc subnet
+delete_if_exists "$PREFIX-net" vpc network

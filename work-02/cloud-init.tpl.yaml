@@ -20,3 +20,20 @@ runcmd:
   - bash -c 'echo "${GREETING} on $(hostname)" > /var/www/html/index.nginx-debian.html'
   - nginx -t
   - systemctl restart nginx
+  - |
+      set -e
+      DISK_LOC='/dev/disk/by-id/virtio-data'
+      if [ -b "$DISK_LOC" ]; then
+        echo "Found disk at $DISK_LOC"
+        if ! blkid "$DISK_LOC" >/dev/null 2>&1; then
+          echo "File system unknown for $DISK_LOC, making mkfs.ext4"
+          mkfs.ext4 "$DISK_LOC"
+        fi
+        mkdir -p /mnt/data
+
+        if ! grep -q "^$DISK_LOC[[:space:]]" /etc/fstab; then
+          echo "$DISK_LOC /mnt/data ext4 defaults,nofail 0 2" >> /etc/fstab
+        fi
+
+        mount /mnt/data
+      fi

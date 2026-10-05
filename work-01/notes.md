@@ -43,4 +43,4 @@ sudo sed -i "s|Welcome to nginx!|cloudlab on $(hostname)|g" \
   /var/www/html/index.nginx-debian.html
 ```
 
-После чего снова проверил вручную веб-страницу по данному адрессу.
+После чего снова проверил вручную веб-страницу по данному адресу.
