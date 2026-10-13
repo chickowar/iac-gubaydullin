@@ -1,3 +1,13 @@
 work-02/cloud-init.yaml
 */nogit.*
 hw-01/cloud-init.yaml
+
+# ключи и секреты в репозиторий не попадают
+*key*.json
+*.pem
+*.key
+.env
+
+# служебное
+*.log
+*.tmp
