@@ -27,7 +27,7 @@ echo "==> проверка распределения"
 
 HOSTS=""
 if [ -n "$LB_IP" ]; then
- for i in $(seq 1 10); do
+ for _ in $(seq 1 10); do
   HOST=$(curl -s --max-time 5 "http://$LB_IP" \
    | sed -n 's/^cloudlab on //p' || true)
   if [ -n "$HOST" ]; then

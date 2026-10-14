@@ -3,7 +3,6 @@ set -euo pipefail
 
 # ---- параметры варианта ----
 PREFIX=gubaydullin-09
-ENV_NAME=lab
 ZONE_A=ru-central1-d
 ZONE_B=ru-central1-a
 CIDR_A=10.19.1.0/24
@@ -69,6 +68,7 @@ yc vpc subnet update --name "$PREFIX-subnet-a" --route-table-name "$PREFIX-rt"
 echo "==> файл настройки из шаблона"
 SSH_KEY=$(cat ~/.ssh/id_ed25519.pub)
 export APP_PORT GREETING SSH_KEY
+# shellcheck disable=SC2016
 envsubst '${APP_PORT} ${GREETING} ${SSH_KEY}' \
   < hw-01/cloud-init.tpl.yaml > hw-01/cloud-init.yaml
 
@@ -123,7 +123,7 @@ else
   | jq -r '.network_interfaces[0].primary_v4_address.address')
   TARGETS="$TARGETS --target subnet-name=${SUBNETS[$idx]},address=$IP"
  done
- yc load-balancer target-group create --name "$PREFIX-tg" $TARGETS
+ yc load-balancer target-group create --name "$PREFIX-tg" "${TARGETS[@]}"
 fi
 
 echo "==> балансировщик"
